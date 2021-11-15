@@ -9,6 +9,7 @@ using System.IO;
 using System.Text.Json;
 
 using Fluent = Microsoft.Azure.Management.ResourceManager.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Azure.Management.Subscription;
 
 namespace Microsoft.AppInnovation.Budgets
@@ -16,6 +17,7 @@ namespace Microsoft.AppInnovation.Budgets
     public static class HttpTrigger1
     {
         private static AlertRequest alert;
+        private static AzureCredentials credentials;
 
         [Function("HttpTrigger1")]
         public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
@@ -45,12 +47,8 @@ namespace Microsoft.AppInnovation.Budgets
             try
             {
                 logger.LogInformation("Authenticating with Azure endpoints.");
-                // TODO: Authentication switch (Local, Cloud)
-                // TODO: Switch to environment variables (local.settings.json)
-                var credentials = Fluent.SdkContext.AzureCredentialsFactory.FromFile("./credentials.json");
 
                 var client = new SubscriptionClient(credentials);
-                //var subscriptions = client.Subscriptions.List();
                 var subscription = client.Subscriptions.Get(alert.data.SubscriptionId);
 
                 logger.LogInformation("Updating subscription state.");
@@ -82,6 +80,25 @@ namespace Microsoft.AppInnovation.Budgets
             }
 
             return JsonSerializer.Deserialize<AlertRequest>(body);
+        }
+
+        private static AzureCredentials GetCredentials(ILogger logger)
+        {
+            if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
+            {
+                logger.LogDebug("Running in development mode.");
+                var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+                var clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET");
+                var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+                var credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
+            }
+            else
+            {
+                logger.LogDebug("Running in production mode.");
+                var credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
+            }
+
+            return credentials;
         }
     }
 
