@@ -27,9 +27,6 @@ namespace Microsoft.AppInnovation.Budgets
             logger.LogInformation("C# HTTP trigger function processed a request.");
 
             /*
-                Parse payload
-                Authenticate with fabric
-                Update Subscription state
                 ? Write table storage logs
             */
 
@@ -47,12 +44,10 @@ namespace Microsoft.AppInnovation.Budgets
             try
             {
                 logger.LogInformation("Authenticating with Azure endpoints.");
+                credentials = GetCredentials(logger);
 
-                var client = new SubscriptionClient(credentials);
-                var subscription = client.Subscriptions.Get(alert.data.SubscriptionId);
-
-                logger.LogInformation("Updating subscription state.");
-                //client.Subscription.Cancel(subscription.SubscriptionId);
+                logger.LogInformation("Updating Azure subscription state.");
+                DisableSubscription(logger, alert);
             }
             catch (Exception e)
             {
@@ -99,6 +94,16 @@ namespace Microsoft.AppInnovation.Budgets
             }
 
             return credentials;
+        }
+
+        private static void DisableSubscription(ILogger logger, AlertRequest alert)
+        {
+            var client = new SubscriptionClient(credentials);
+            logger.LogDebug("Validating subscription access.");
+            var subscription = client.Subscriptions.Get(alert.data.SubscriptionId);
+
+            logger.LogDebug("Setting subscription to disable state.");
+            //client.Subscription.Cancel(subscription.SubscriptionId);
         }
     }
 
