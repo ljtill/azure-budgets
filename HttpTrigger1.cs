@@ -12,11 +12,13 @@ using Fluent = Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Azure.Management.Subscription;
 
+using Microsoft.AppInnovation.Budgets.Exceptions;
+using Microsoft.AppInnovation.Budgets.Schema;
+
 namespace Microsoft.AppInnovation.Budgets
 {
     public class HttpTrigger1
     {
-
         private readonly ILogger _logger;
 
         public HttpTrigger1(ILoggerFactory loggerFactory)
@@ -25,16 +27,11 @@ namespace Microsoft.AppInnovation.Budgets
         }
 
         private AlertRequest alert;
-        private AzureCredentials credentials;
 
         [Function("HttpTrigger1")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            /*
-                ? Write table storage logs
-            */
 
             try
             {
@@ -51,10 +48,10 @@ namespace Microsoft.AppInnovation.Budgets
             try
             {
                 _logger.LogInformation("Authenticating with Azure endpoints.");
-                credentials = GetCredentials(_logger);
+                var credentials = GetCredentials(_logger);
 
                 _logger.LogInformation("Updating Azure subscription state.");
-                DisableSubscription(_logger, alert);
+                DisableSubscription(_logger, credentials, alert);
             }
             catch (Exception e)
             {
@@ -76,7 +73,7 @@ namespace Microsoft.AppInnovation.Budgets
             if (string.IsNullOrEmpty(body))
             {
                 // TODO: Implement custom exception
-                throw new Exception();
+                throw new ParserException("Unknown request schema provided.");
             }
 
             return JsonSerializer.Deserialize<AlertRequest>(body);
@@ -84,24 +81,26 @@ namespace Microsoft.AppInnovation.Budgets
 
         private AzureCredentials GetCredentials(ILogger logger)
         {
+            AzureCredentials credentials = null;
+
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
                 logger.LogDebug("Running in development mode.");
                 var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
                 var clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET");
                 var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-                var credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
+                credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
             }
             else
             {
                 logger.LogDebug("Running in production mode.");
-                var credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
+                credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
             }
 
             return credentials;
         }
 
-        private void DisableSubscription(ILogger logger, AlertRequest alert)
+        private void DisableSubscription(ILogger logger, AzureCredentials credentials, AlertRequest alert)
         {
             var client = new SubscriptionClient(credentials);
             logger.LogDebug("Validating subscription access.");
@@ -110,28 +109,5 @@ namespace Microsoft.AppInnovation.Budgets
             logger.LogDebug("Setting subscription to disable state.");
             //client.Subscription.Cancel(subscription.SubscriptionId);
         }
-    }
-
-    public class AlertRequest
-    {
-        public AlertRequest() { }
-        public string schemaId { get; set; }
-        public AlertRequestData data { get; set; }
-    }
-
-    public class AlertRequestData
-    {
-        public AlertRequestData() { }
-        public string SubscriptionName { get; set; }
-        public string SubscriptionId { get; set; }
-        public string SpendingAmount { get; set; }
-        public string BudgetStartDate { get; set; }
-        public string Budget { get; set; }
-        public string Unit { get; set; }
-        public string BudgetCreator { get; set; }
-        public string BudgetName { get; set; }
-        public string BudgetType { get; set; }
-        public string ResourceGroup { get; set; }
-        public string NotificationThresholdAmount { get; set; }
     }
 }
