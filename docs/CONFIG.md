@@ -28,7 +28,7 @@ New-AzResourceGroupDeployment `
     -TemplateParameterObject @{"name"="<Update>"; "location"="<Update>";}:
 ```
 
-> There is also an ARM Template available within the infra / folder
+> An ARM Template has also been added to the infra / folder
 
 ### Permissions
 
