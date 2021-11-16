@@ -17,18 +17,18 @@ using Microsoft.AppInnovation.Budgets.Schema;
 
 namespace Microsoft.AppInnovation.Budgets
 {
-    public class HttpTrigger1
+    public class HttpTrigger
     {
         private readonly ILogger _logger;
 
-        public HttpTrigger1(ILoggerFactory loggerFactory)
+        public HttpTrigger(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<HttpTrigger1>();
+            _logger = loggerFactory.CreateLogger<HttpTrigger>();
         }
 
         private BudgetAlert alert;
 
-        [Function("HttpTrigger1")]
+        [Function("HttpTrigger")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
