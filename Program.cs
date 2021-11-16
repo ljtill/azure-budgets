@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker.Configuration;
 
-namespace budgets
+namespace Microsoft.AppInnovation.Budgets
 {
     public class Program
     {
