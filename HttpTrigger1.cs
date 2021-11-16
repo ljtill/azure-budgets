@@ -108,7 +108,7 @@ namespace Microsoft.AppInnovation.Budgets
         {
             var client = new SubscriptionClient(credentials);
             logger.LogDebug("Validating subscription access.");
-            var subscription = client.Subscriptions.Get(alert.data.SubscriptionId);
+            var subscription = client.Subscriptions.Get(alert.Data.SubscriptionId);
 
             logger.LogDebug("Setting subscription to disable state.");
             //client.Subscription.Cancel(subscription.SubscriptionId);
