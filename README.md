@@ -4,10 +4,10 @@ Budgets is a tool for enforcing hard limits on Azure Subscriptions spend. By int
 
 ## Tasks
 
-- [ ] Create Folder Structure
-- [ ] Rename `HttpTrigger1`
+- [x] Create Folder Structure
+- [x] Rename `HttpTrigger1`
 - [ ] Write Table Storage Logs
-- [ ] Tag Exceptions
+- [ ] Check for Tag Exclusion
 
 ## Structure
 
