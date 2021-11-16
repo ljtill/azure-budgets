@@ -14,17 +14,23 @@ using Microsoft.Azure.Management.Subscription;
 
 namespace Microsoft.AppInnovation.Budgets
 {
-    public static class HttpTrigger1
+    public class HttpTrigger1
     {
-        private static AlertRequest alert;
-        private static AzureCredentials credentials;
+
+        private readonly ILogger _logger;
+
+        public HttpTrigger1(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<HttpTrigger1>();
+        }
+
+        private AlertRequest alert;
+        private AzureCredentials credentials;
 
         [Function("HttpTrigger1")]
-        public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
-            FunctionContext executionContext)
+        public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
         {
-            var logger = executionContext.GetLogger("HttpTrigger1");
-            logger.LogInformation("C# HTTP trigger function processed a request.");
+            _logger.LogInformation("C# HTTP trigger function processed a request.");
 
             /*
                 ? Write table storage logs
@@ -32,27 +38,29 @@ namespace Microsoft.AppInnovation.Budgets
 
             try
             {
-                logger.LogInformation("Parsing HTTP request body data.");
+                _logger.LogInformation("Parsing HTTP request body data.");
                 alert = ParseHttpRequest(req);
             }
             catch
             {
                 // TODO: Custom error logging
+                // TODO: JSON Response message
                 return req.CreateResponse(HttpStatusCode.InternalServerError);
             }
 
             try
             {
-                logger.LogInformation("Authenticating with Azure endpoints.");
-                credentials = GetCredentials(logger);
+                _logger.LogInformation("Authenticating with Azure endpoints.");
+                credentials = GetCredentials(_logger);
 
-                logger.LogInformation("Updating Azure subscription state.");
-                DisableSubscription(logger, alert);
+                _logger.LogInformation("Updating Azure subscription state.");
+                DisableSubscription(_logger, alert);
             }
             catch (Exception e)
             {
                 // TODO: Custom error logging
-                logger.LogError($"Exception thrown during authentication process (Reason='{e.Message}')");
+                // TODO: JSON Response message
+                _logger.LogError($"Exception thrown during authentication process (Reason='{e.Message}')");
                 // TODO: Return error response (subscription not found)
                 // TODO: Return error response (insufficient permissions)
                 return req.CreateResponse(HttpStatusCode.InternalServerError);
@@ -62,7 +70,7 @@ namespace Microsoft.AppInnovation.Budgets
             return response;
         }
 
-        private static AlertRequest ParseHttpRequest(HttpRequestData req)
+        private AlertRequest ParseHttpRequest(HttpRequestData req)
         {
             var body = new StreamReader(req.Body).ReadToEnd();
             if (string.IsNullOrEmpty(body))
@@ -74,7 +82,7 @@ namespace Microsoft.AppInnovation.Budgets
             return JsonSerializer.Deserialize<AlertRequest>(body);
         }
 
-        private static AzureCredentials GetCredentials(ILogger logger)
+        private AzureCredentials GetCredentials(ILogger logger)
         {
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
@@ -93,7 +101,7 @@ namespace Microsoft.AppInnovation.Budgets
             return credentials;
         }
 
-        private static void DisableSubscription(ILogger logger, AlertRequest alert)
+        private void DisableSubscription(ILogger logger, AlertRequest alert)
         {
             var client = new SubscriptionClient(credentials);
             logger.LogDebug("Validating subscription access.");
