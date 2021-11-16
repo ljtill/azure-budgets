@@ -11,9 +11,9 @@ Budgets is a tool for enforcing hard limits on Azure Subscription spend. By inte
 
 ## Structure
 
-docs/ - Documentation
-eng/ - Tooling (inc Templates)
-src/ - Source Code
+- docs/ - Documentation
+- eng/ - Tooling (inc Templates)
+- src/ - Source Code
 
 ## Getting Started
 
