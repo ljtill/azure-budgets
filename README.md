@@ -16,11 +16,10 @@ Budgets is a tool for enforcing hard limits on Azure Subscriptions spend. By int
 - eng/ - Tooling (inc Templates)
 - src/ - Source Code
 
-## Tasks
+## Development
 
-- [x] Create Folder Structure
-- [x] Rename `HttpTrigger1`
-- [x] Create Bicep files for deployment
+- [x] Update Folder Structure
+- [x] Create Bicep / ARM files for deployment
 - [ ] Write Table Storage Logs
 - [ ] Check for Tag Exclusion
 - [ ] Create Getting Started guide
