@@ -26,7 +26,7 @@ namespace Microsoft.AppInnovation.Budgets
             _logger = loggerFactory.CreateLogger<HttpTrigger1>();
         }
 
-        private AlertRequest alert;
+        private BudgetAlert alert;
 
         [Function("HttpTrigger1")]
         public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
@@ -67,16 +67,20 @@ namespace Microsoft.AppInnovation.Budgets
             return response;
         }
 
-        private AlertRequest ParseHttpRequest(HttpRequestData req)
+        private BudgetAlert ParseHttpRequest(HttpRequestData req)
         {
             var body = new StreamReader(req.Body).ReadToEnd();
             if (string.IsNullOrEmpty(body))
             {
-                // TODO: Implement custom exception
                 throw new ParserException("Unknown request schema provided.");
             }
 
-            return JsonSerializer.Deserialize<AlertRequest>(body);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            return JsonSerializer.Deserialize<BudgetAlert>(body, options);
         }
 
         private AzureCredentials GetCredentials(ILogger logger)
@@ -100,7 +104,7 @@ namespace Microsoft.AppInnovation.Budgets
             return credentials;
         }
 
-        private void DisableSubscription(ILogger logger, AzureCredentials credentials, AlertRequest alert)
+        private void DisableSubscription(ILogger logger, AzureCredentials credentials, BudgetAlert alert)
         {
             var client = new SubscriptionClient(credentials);
             logger.LogDebug("Validating subscription access.");
