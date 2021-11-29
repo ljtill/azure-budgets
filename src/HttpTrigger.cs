@@ -8,6 +8,9 @@ using System;
 using System.IO;
 using System.Text.Json;
 
+using Azure.Core;
+using Azure.Identity;
+
 using Microsoft.AppInnovation.Budgets.Exceptions;
 using Microsoft.AppInnovation.Budgets.Schema;
 
@@ -29,6 +32,8 @@ namespace Microsoft.AppInnovation.Budgets
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
+            HttpResponseData response;
+
             try
             {
                 _logger.LogInformation("Parsing HTTP request body data.");
@@ -38,16 +43,22 @@ namespace Microsoft.AppInnovation.Budgets
             {
                 // TODO: Custom error logging
                 // TODO: JSON Response message
-                return req.CreateResponse(HttpStatusCode.InternalServerError);
+                response = req.CreateResponse(HttpStatusCode.InternalServerError);
             }
 
             try
             {
+                _logger.LogInformation("Authenticating with identity endpoints.");
+                var accessToken = GetAccessToken(_logger);
+                _logger.LogInformation($"Token: {accessToken}");
+
                 _logger.LogInformation("Checking Azure subscription exclusion tags.");
                 CheckSubscriptionTags(_logger, alert.Data.SubscriptionId);
 
                 _logger.LogInformation("Updating Azure subscription state.");
-                //DisableSubscription(_logger, credentials, alert);
+                DisableSubscription(_logger, alert.Data.SubscriptionId);
+
+                response = req.CreateResponse(HttpStatusCode.OK);
             }
             catch (Exception e)
             {
@@ -56,10 +67,9 @@ namespace Microsoft.AppInnovation.Budgets
                 _logger.LogError($"Exception thrown during authentication process (Reason='{e.Message}')");
                 // TODO: Return error response (subscription not found)
                 // TODO: Return error response (insufficient permissions)
-                return req.CreateResponse(HttpStatusCode.InternalServerError);
+                response = req.CreateResponse(HttpStatusCode.InternalServerError);
             }
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
             return response;
         }
 
@@ -75,27 +85,39 @@ namespace Microsoft.AppInnovation.Budgets
             {
                 PropertyNameCaseInsensitive = true
             };
-
             return JsonSerializer.Deserialize<BudgetAlert>(body, options);
         }
 
-        private void GetCredentials(ILogger logger)
+        private string GetAccessToken(ILogger logger)
         {
+            AccessToken token;
+
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
                 logger.LogDebug("Running in development mode.");
                 var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
                 var clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET");
                 var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-                //credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
+
+                logger.LogDebug("Authenticating client secret credential.");
+                var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+                logger.LogDebug("Retrieiving access token.");
+                token = credential.GetToken(new TokenRequestContext());
             }
             else
             {
                 logger.LogDebug("Running in production mode.");
-                //credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
+                var clientId = Environment.GetEnvironmentVariable("AZURE_MANAGED_IDENTITY");
+
+                logger.LogDebug("Authenticating managed identity credential.");
+                var credential = new ManagedIdentityCredential(clientId);
+
+                logger.LogDebug("Retrieving access token.");
+                token = credential.GetToken(new TokenRequestContext());
             }
 
-            return;
+            return token.Token;
         }
 
         private void CheckSubscriptionTags(ILogger logger, string SubscriptionId)
@@ -104,7 +126,7 @@ namespace Microsoft.AppInnovation.Budgets
             // TODO: Add HTTP call
         }
 
-        private void DisableSubscription(ILogger logger, BudgetAlert alert)
+        private void DisableSubscription(ILogger logger, string SubscriptionId)
         {
             logger.LogDebug("Setting subscription to disable state.");
             // TODO: Add HTTP call
