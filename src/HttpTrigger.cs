@@ -47,11 +47,11 @@ namespace Microsoft.AppInnovation.Budgets
 
             try
             {
-                _logger.LogInformation("Authenticating with Azure endpoints.");
-                var credentials = GetCredentials(_logger);
+                _logger.LogInformation("Checking Azure subscription exclusion tags.");
+                CheckSubscriptionTags(_logger, alert.Data.SubscriptionId);
 
                 _logger.LogInformation("Updating Azure subscription state.");
-                DisableSubscription(_logger, credentials, alert);
+                //DisableSubscription(_logger, credentials, alert);
             }
             catch (Exception e)
             {
@@ -102,6 +102,26 @@ namespace Microsoft.AppInnovation.Budgets
             }
 
             return credentials;
+        }
+
+        private SubscriptionClient GetSubscriptionClient(ILogger logger)
+        {
+            logger.LogDebug("Authenticating with Azure endpoints.");
+            var credentials = GetCredentials(logger);
+
+            logger.LogDebug("Creating Azure subscription client.");
+            var client = new SubscriptionClient(credentials);
+
+            return client;
+        }
+
+        private void CheckSubscriptionTags(ILogger logger, string SubscriptionId)
+        {
+            var client = GetSubscriptionClient(logger);
+
+            logger.LogDebug("Getting subscription tags.");
+            var subscription = client.Subscriptions.Get(SubscriptionId);
+
         }
 
         private void DisableSubscription(ILogger logger, AzureCredentials credentials, BudgetAlert alert)
