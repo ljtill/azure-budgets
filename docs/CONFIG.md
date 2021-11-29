@@ -32,6 +32,8 @@ New-AzResourceGroupDeployment `
 
 ### Permissions
 
+TODO: Add code snippets for Azure CLI / Azure PowerShell
+
 1. Navigate to the Subscription blade which will be enrolled for Budget management
 
 Screenshot-A
