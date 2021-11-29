@@ -1,0 +1,16 @@
+{
+    "schemaId": "AIP Budget Notification",
+    "data": {
+        "SubscriptionName": "Azure Subscription 4",
+        "SubscriptionId": "78ef0705-dafd-4402-a4bd-00b9cb197cf0",
+        "SpendingAmount": "100",
+        "BudgetStartDate": "6/1/2018",
+        "Budget": "50",
+        "Unit": "USD",
+        "BudgetCreator": "email@contoso.com",
+        "BudgetName": "BudgetName",
+        "BudgetType": "Cost",
+        "ResourceGroup": "Test",
+        "NotificationThresholdAmount": "0.8"
+    }
+}
