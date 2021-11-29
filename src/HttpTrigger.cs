@@ -8,10 +8,6 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-using Fluent = Microsoft.Azure.Management.ResourceManager.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
-using Microsoft.Azure.Management.Subscription;
-
 using Microsoft.AppInnovation.Budgets.Exceptions;
 using Microsoft.AppInnovation.Budgets.Schema;
 
@@ -83,55 +79,35 @@ namespace Microsoft.AppInnovation.Budgets
             return JsonSerializer.Deserialize<BudgetAlert>(body, options);
         }
 
-        private AzureCredentials GetCredentials(ILogger logger)
+        private void GetCredentials(ILogger logger)
         {
-            AzureCredentials credentials = null;
-
             if (Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") == "Development")
             {
                 logger.LogDebug("Running in development mode.");
                 var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
                 var clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET");
                 var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-                credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
+                //credentials = Fluent.SdkContext.AzureCredentialsFactory.FromServicePrincipal(clientId, clientSecret, tenantId, Fluent.AzureEnvironment.AzureGlobalCloud);
             }
             else
             {
                 logger.LogDebug("Running in production mode.");
-                credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
+                //credentials = Fluent.SdkContext.AzureCredentialsFactory.FromSystemAssignedManagedServiceIdentity(Fluent.Authentication.MSIResourceType.AppService, Fluent.AzureEnvironment.AzureGlobalCloud);
             }
 
-            return credentials;
-        }
-
-        private SubscriptionClient GetSubscriptionClient(ILogger logger)
-        {
-            logger.LogDebug("Authenticating with Azure endpoints.");
-            var credentials = GetCredentials(logger);
-
-            logger.LogDebug("Creating Azure subscription client.");
-            var client = new SubscriptionClient(credentials);
-
-            return client;
+            return;
         }
 
         private void CheckSubscriptionTags(ILogger logger, string SubscriptionId)
         {
-            var client = GetSubscriptionClient(logger);
-
             logger.LogDebug("Getting subscription tags.");
-            var subscription = client.Subscriptions.Get(SubscriptionId);
-
+            // TODO: Add HTTP call
         }
 
-        private void DisableSubscription(ILogger logger, AzureCredentials credentials, BudgetAlert alert)
+        private void DisableSubscription(ILogger logger, BudgetAlert alert)
         {
-            var client = new SubscriptionClient(credentials);
-            logger.LogDebug("Validating subscription access.");
-            var subscription = client.Subscriptions.Get(alert.Data.SubscriptionId);
-
             logger.LogDebug("Setting subscription to disable state.");
-            //client.Subscription.Cancel(subscription.SubscriptionId);
+            // TODO: Add HTTP call
         }
     }
 }
