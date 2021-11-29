@@ -34,6 +34,7 @@ namespace Microsoft.AppInnovation.Budgets
 
             HttpResponseData response;
 
+            #region Parse
             try
             {
                 _logger.LogInformation("Parsing HTTP request body data.");
@@ -45,18 +46,14 @@ namespace Microsoft.AppInnovation.Budgets
                 // TODO: JSON Response message
                 response = req.CreateResponse(HttpStatusCode.InternalServerError);
             }
+            #endregion
 
+            #region Authenticate
             try
             {
                 _logger.LogInformation("Authenticating with identity endpoints.");
                 var accessToken = GetAccessToken(_logger);
                 _logger.LogInformation($"Token: {accessToken}");
-
-                _logger.LogInformation("Checking Azure subscription exclusion tags.");
-                CheckSubscriptionTags(_logger, alert.Data.SubscriptionId);
-
-                _logger.LogInformation("Updating Azure subscription state.");
-                DisableSubscription(_logger, alert.Data.SubscriptionId);
 
                 response = req.CreateResponse(HttpStatusCode.OK);
             }
@@ -65,10 +62,30 @@ namespace Microsoft.AppInnovation.Budgets
                 // TODO: Custom error logging
                 // TODO: JSON Response message
                 _logger.LogError($"Exception thrown during authentication process (Reason='{e.Message}')");
+                // TODO: Return error response (invalid credentials)
+                response = req.CreateResponse(HttpStatusCode.InternalServerError);
+            }
+            #endregion
+
+            #region Process
+            try
+            {
+                _logger.LogInformation("Checking Azure subscription exclusion tags.");
+                CheckSubscriptionTags(_logger, alert.Data.SubscriptionId);
+
+                _logger.LogInformation("Updating Azure subscription state.");
+                DisableSubscription(_logger, alert.Data.SubscriptionId);
+            }
+            catch (Exception e)
+            {
+                // TODO: Custom error logging
+                // TODO: JSON Response message
+                _logger.LogError($"Exception thrown during subscription process (Reason='{e.Message}')");
                 // TODO: Return error response (subscription not found)
                 // TODO: Return error response (insufficient permissions)
                 response = req.CreateResponse(HttpStatusCode.InternalServerError);
             }
+            #endregion
 
             return response;
         }
@@ -128,6 +145,9 @@ namespace Microsoft.AppInnovation.Budgets
 
         private void DisableSubscription(ILogger logger, string SubscriptionId)
         {
+            // TODO: Check Subscription state
+            // TODO: Add HTTP call
+
             logger.LogDebug("Setting subscription to disable state.");
             // TODO: Add HTTP call
         }
