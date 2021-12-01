@@ -13,7 +13,7 @@ namespace Microsoft.AppInnovation.Budgets
         {
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
-                .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Debug))
+                .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Trace))
                 .Build();
 
             host.Run();
