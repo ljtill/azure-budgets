@@ -1,2 +1,5 @@
 # macOS System Files
 .DS_Store
+
+# Test Files
+local.json
