@@ -66,7 +66,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue($"Bearer {_accessToken}");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}").Result;
