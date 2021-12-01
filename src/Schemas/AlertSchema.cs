@@ -1,15 +1,15 @@
-namespace Microsoft.AppInnovation.Budgets.Schema
+namespace Microsoft.AppInnovation.Budgets.Schemas
 {
-    public class BudgetAlert
+    public class Alert
     {
-        public BudgetAlert() { }
+        public Alert() { }
         public string SchemaId { get; set; }
-        public BudgetAlertData Data { get; set; }
+        public AlertData Data { get; set; }
     }
 
-    public class BudgetAlertData
+    public class AlertData
     {
-        public BudgetAlertData() { }
+        public AlertData() { }
         public string SubscriptionName { get; set; }
         public string SubscriptionId { get; set; }
         public string SpendingAmount { get; set; }
