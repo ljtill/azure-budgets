@@ -39,7 +39,7 @@ namespace Microsoft.AppInnovation.Budgets
                 var subscriptionClient = new SubscriptionClient(_logger);
 
                 // Check
-                _logger.LogInformation("Checking subscription.");
+                _logger.LogInformation("Checking subscription tags.");
                 if (CheckSubscriptionTags(subscriptionClient, subscriptionId) == false)
                 {
                     // Disable

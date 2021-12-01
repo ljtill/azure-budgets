@@ -4,8 +4,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 
+using System.Text.Json;
+
 using Azure.Core;
 using Azure.Identity;
+
+using Microsoft.AppInnovation.Budgets.Schemas;
 
 namespace Microsoft.AppInnovation.Budgets.Clients
 {
@@ -13,6 +17,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
     {
         private readonly ILogger _logger;
         private readonly string _accessToken;
+        private string _apiVersion = "2020-01-01";
 
         #region Constructors
         public SubscriptionClient(ILogger logger)
@@ -58,6 +63,14 @@ namespace Microsoft.AppInnovation.Budgets.Clients
 
             return token.Token;
         }
+
+        private Subscription ParseApiRequest(HttpContent content)
+        {
+            var contentRaw = content.ReadAsStringAsync().Result;
+            var contentParsed = JsonSerializer.Deserialize<Subscription>(contentRaw);
+
+            return contentParsed;
+        }
         #endregion
 
         #region Public Methods
@@ -66,17 +79,26 @@ namespace Microsoft.AppInnovation.Budgets.Clients
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_accessToken);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}").Result;
+                var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}?api-version={_apiVersion}").Result;
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    throw new Exception("Subscription not found.");
+                    // TODO: Improve exception messages
+                    switch (response.StatusCode)
+                    {
+                        case HttpStatusCode.Unauthorized:
+                            throw new Exception($"Unable to authenticate.");
+                        case HttpStatusCode.NotFound:
+                            throw new Exception($"Unable to retrieve subscription (Id={subscriptionId}).");
+                        default:
+                            throw new Exception($"Request failed with status code {response.StatusCode}.");
+                    }
                 }
 
-                var data = response.Content.ReadAsStringAsync().Result;
-                _logger.LogInformation("Placeholder");
+                var responseContent = response.Content;
+                var subscription = ParseApiRequest(responseContent);
             }
         }
         #endregion
