@@ -30,7 +30,7 @@ namespace Microsoft.AppInnovation.Budgets
             try
             {
                 // Parse
-                _logger.LogInformation("Parsing HTTP request body data.");
+                _logger.LogInformation("Parsing function request.");
                 var subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
 
                 // Client
@@ -38,15 +38,15 @@ namespace Microsoft.AppInnovation.Budgets
 
                 // Check
                 _logger.LogInformation("Checking subscription.");
-                if (CheckSubscriptionTags(subscriptionId) == false)
+                if (CheckSubscriptionTags(subscriptionClient, subscriptionId) == false)
                 {
                     // Disable
                     _logger.LogInformation("Disabling subscription.");
-                    DisableSubscription(subscriptionId);
+                    DisableSubscription(subscriptionClient, subscriptionId);
                 }
                 else
                 {
-                    // Skip
+                    // Exclude
                     _logger.LogInformation("Excluded subscription detected.");
                 }
             }
@@ -78,7 +78,7 @@ namespace Microsoft.AppInnovation.Budgets
             return JsonSerializer.Deserialize<Alert>(body, options);
         }
 
-        private bool CheckSubscriptionTags(string SubscriptionId)
+        private bool CheckSubscriptionTags(SubscriptionClient client, string SubscriptionId)
         {
             _logger.LogDebug("Retrieving subscription.");
 
@@ -87,7 +87,7 @@ namespace Microsoft.AppInnovation.Budgets
             return false;
         }
 
-        private void DisableSubscription(string SubscriptionId)
+        private void DisableSubscription(SubscriptionClient client, string SubscriptionId)
         {
             _logger.LogDebug("Disabling subscription.");
 
