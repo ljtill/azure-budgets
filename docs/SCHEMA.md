@@ -25,6 +25,4 @@
 
 [Common Alert Schema](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-common-schema)
 
-```text
-The Common Alert Schema is currently [unsupported](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-common-schema#how-do-i-enable-the-common-alert-schema) for Cost Management
-```
+> The Common Alert Schema is currently [unsupported](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-common-schema#how-do-i-enable-the-common-alert-schema) for Cost Management
