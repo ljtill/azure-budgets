@@ -63,18 +63,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
 
             return token.Token;
         }
-
-        private Subscription ParseApiRequest(HttpContent content)
-        {
-            var contentRaw = content.ReadAsStringAsync().Result;
-            var contentParsed = JsonSerializer.Deserialize<Subscription>(contentRaw);
-
-            return contentParsed;
-        }
-        #endregion
-
-        #region Public Methods
-        public void Get(string subscriptionId)
+        private HttpResponseMessage NewApiRequest(string route)
         {
             using (var client = new HttpClient())
             {
@@ -82,7 +71,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}?api-version={_apiVersion}").Result;
+                var response = client.GetAsync($"https://management.azure.com/{route}?api-version={_apiVersion}").Result;
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
                     // TODO: Improve exception messages
@@ -91,14 +80,47 @@ namespace Microsoft.AppInnovation.Budgets.Clients
                         case HttpStatusCode.Unauthorized:
                             throw new Exception($"Unable to authenticate.");
                         case HttpStatusCode.NotFound:
-                            throw new Exception($"Unable to retrieve subscription (Id={subscriptionId}).");
+                            throw new Exception($"Unable to retrieve subscription.");
                         default:
-                            throw new Exception($"Request failed with status code {response.StatusCode}.");
+                            throw new Exception($"Unable to process request (Status={response.StatusCode}.)");
                     }
                 }
 
-                var responseContent = response.Content;
-                var subscription = ParseApiRequest(responseContent);
+                return response;
+            }
+        }
+        private Subscription ParseApiRequest(HttpContent content)
+        {
+            var contentRaw = content.ReadAsStringAsync().Result;
+            var contentParsed = JsonSerializer.Deserialize<Subscription>(contentRaw);
+            return contentParsed;
+        }
+        private SubscriptionTags ParseTagsApiRequest(HttpContent content)
+        {
+            var contentRaw = content.ReadAsStringAsync().Result;
+            var contentParsed = JsonSerializer.Deserialize<SubscriptionTags>(contentRaw);
+            return contentParsed;
+        }
+        #endregion
+
+        #region Public Methods
+        public void Get(string subscriptionId)
+        {
+            var response = NewApiRequest($"/subscriptions/{subscriptionId}");
+            var responseContent = response.Content;
+            var subscription = ParseApiRequest(responseContent);
+        }
+        public void GetTags(string subscriptionId)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.CostManagement/tags?api-version={_apiVersion}").Result;
+                if (response.StatusCode != HttpStatusCode.OK)
+                { }
             }
         }
         #endregion
