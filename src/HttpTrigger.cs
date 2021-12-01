@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 using Azure.Core;
@@ -133,8 +135,24 @@ namespace Microsoft.AppInnovation.Budgets
 
         private void CheckSubscriptionTags(string accessToken, string SubscriptionId)
         {
-            _logger.LogDebug("Getting subscription tags.");
-            // TODO: Add HTTP call
+            _logger.LogDebug("Retrieving subscription.");
+            // TODO: Get the Subscription
+
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Clear();
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue($"Bearer {accessToken}");
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Pagination
+            // Schema
+
+            //_logger.LogDebug("Getting subscription tags.");
+            // TODO: Check the Subscription Tags
+
+            //_logger.LogDebug("Updating subscription state.")
+            // TODO: Update process state
+
         }
 
         private void DisableSubscription(string accessToken, string SubscriptionId)
