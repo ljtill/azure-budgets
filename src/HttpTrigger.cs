@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
+using System;
 using System.IO;
 using System.Text.Json;
 
@@ -56,8 +57,9 @@ namespace Microsoft.AppInnovation.Budgets
                 _logger.LogError(pe.Message);
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
-            catch
+            catch (Exception e)
             {
+                _logger.LogError($"Undefined exception: {e.Message}");
                 return req.CreateResponse(HttpStatusCode.InternalServerError);
             }
 
@@ -79,16 +81,21 @@ namespace Microsoft.AppInnovation.Budgets
             return JsonSerializer.Deserialize<Alert>(body, options);
         }
 
-        private bool CheckSubscriptionTags(SubscriptionClient client, string SubscriptionId)
+        private bool CheckSubscriptionTags(SubscriptionClient client, string subscriptionId)
         {
             _logger.LogDebug("Retrieving subscription.");
 
             // TODOD: Implementation
 
+            // Retrieve the subscription
+            client.Get(subscriptionId);
+
+            // Parse the tags values
+
             return false;
         }
 
-        private void DisableSubscription(SubscriptionClient client, string SubscriptionId)
+        private void DisableSubscription(SubscriptionClient client, string subscriptionId)
         {
             _logger.LogDebug("Disabling subscription.");
 

@@ -76,6 +76,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
                 }
 
                 var data = response.Content.ReadAsStringAsync().Result;
+                _logger.LogInformation("Placeholder");
             }
         }
         #endregion
