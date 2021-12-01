@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker.Configuration;
 
+using Microsoft.Extensions.Logging;
+
 namespace Microsoft.AppInnovation.Budgets
 {
     public class Program
@@ -11,6 +13,7 @@ namespace Microsoft.AppInnovation.Budgets
         {
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
+                .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Debug))
                 .Build();
 
             host.Run();

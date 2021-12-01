@@ -69,7 +69,7 @@ namespace Microsoft.AppInnovation.Budgets.Clients
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue($"Bearer {_accessToken}");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                var response = client.GetAsync($"https://management.azure.com/subscriptions/{SubscriptionId}").Result;
+                var response = client.GetAsync($"https://management.azure.com/subscriptions/{subscriptionId}").Result;
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception("Subscription not found.");

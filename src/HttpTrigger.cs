@@ -34,6 +34,7 @@ namespace Microsoft.AppInnovation.Budgets
                 var subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
 
                 // Client
+                _logger.LogDebug("Creating subscription client.");
                 var subscriptionClient = new SubscriptionClient(_logger);
 
                 // Check
