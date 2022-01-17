@@ -85,7 +85,7 @@ namespace Microsoft.AppInnovation.Budgets
         {
             _logger.LogDebug("Retrieving subscription.");
 
-            // TODOD: Implementation
+            // TODO: Implementation
 
             // Retrieve the subscription
             client.Get(subscriptionId);
