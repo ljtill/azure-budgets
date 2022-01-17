@@ -1,22 +1,14 @@
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Azure.Functions.Worker.Configuration;
+namespace Budgets;
 
-using Microsoft.Extensions.Logging;
-
-namespace Microsoft.AppInnovation.Budgets
+public class Program
 {
-    public class Program
+    public static void Main()
     {
-        public static void Main()
-        {
-            var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
-                .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Trace))
-                .Build();
+        var host = new HostBuilder()
+            .ConfigureFunctionsWorkerDefaults()
+            .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Trace))
+            .Build();
 
-            host.Run();
-        }
+        host.Run();
     }
 }

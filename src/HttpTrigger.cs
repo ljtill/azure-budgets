@@ -1,107 +1,94 @@
-using System.Collections.Generic;
-using System.Net;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
+using Budgets.Clients;
+using Budgets.Exceptions;
+using Budgets.Models;
 
-using System;
-using System.IO;
-using System.Text.Json;
+namespace Budgets;
 
-using Microsoft.AppInnovation.Budgets.Clients;
-using Microsoft.AppInnovation.Budgets.Exceptions;
-using Microsoft.AppInnovation.Budgets.Schemas;
-
-namespace Microsoft.AppInnovation.Budgets
+public class HttpTrigger
 {
-    public class HttpTrigger
+    private readonly ILogger _logger;
+
+    public HttpTrigger(ILoggerFactory loggerFactory)
     {
-        private readonly ILogger _logger;
+        _logger = loggerFactory.CreateLogger<HttpTrigger>();
+    }
 
-        public HttpTrigger(ILoggerFactory loggerFactory)
+    [Function("HttpTrigger")]
+    public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+    {
+        try
         {
-            _logger = loggerFactory.CreateLogger<HttpTrigger>();
-        }
+            // Parse
+            _logger.LogInformation("Parsing function request.");
+            var subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
 
-        [Function("HttpTrigger")]
-        public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
-        {
-            _logger.LogInformation("C# HTTP trigger function processed a request.");
+            // Client
+            _logger.LogDebug("Creating subscription client.");
+            var subscriptionClient = new SubscriptionClient(_logger);
 
-            try
+            // Check
+            _logger.LogInformation("Checking subscription tags.");
+            if (CheckSubscriptionTags(subscriptionClient, subscriptionId) == false)
             {
-                // Parse
-                _logger.LogInformation("Parsing function request.");
-                var subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
-
-                // Client
-                _logger.LogDebug("Creating subscription client.");
-                var subscriptionClient = new SubscriptionClient(_logger);
-
-                // Check
-                _logger.LogInformation("Checking subscription tags.");
-                if (CheckSubscriptionTags(subscriptionClient, subscriptionId) == false)
-                {
-                    // Disable
-                    _logger.LogInformation("Disabling subscription.");
-                    DisableSubscription(subscriptionClient, subscriptionId);
-                }
-                else
-                {
-                    // Exclude
-                    _logger.LogInformation("Excluded subscription detected.");
-                }
+                // Disable
+                _logger.LogInformation("Disabling subscription.");
+                DisableSubscription(subscriptionClient, subscriptionId);
             }
-            catch (ParserException pe)
+            else
             {
-                _logger.LogError(pe.Message);
-                return req.CreateResponse(HttpStatusCode.BadRequest);
+                // Exclude
+                _logger.LogInformation("Excluded subscription detected.");
             }
-            catch (Exception e)
-            {
-                _logger.LogError($"Undefined exception: {e.Message}");
-                return req.CreateResponse(HttpStatusCode.InternalServerError);
-            }
-
-            return req.CreateResponse(HttpStatusCode.OK);
         }
-
-        private Alert ParseHttpRequest(HttpRequestData req)
+        catch (ParserException pe)
         {
-            var body = new StreamReader(req.Body).ReadToEnd();
-            if (string.IsNullOrEmpty(body))
-            {
-                throw new ParserException("Unknown request schema provided.");
-            }
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            return JsonSerializer.Deserialize<Alert>(body, options);
+            _logger.LogError(pe.Message);
+            return req.CreateResponse(HttpStatusCode.BadRequest);
         }
-
-        private bool CheckSubscriptionTags(SubscriptionClient client, string subscriptionId)
+        catch (Exception e)
         {
-            _logger.LogDebug("Retrieving subscription.");
-
-            // TODO: Implementation
-
-            // Retrieve the subscription
-            client.Get(subscriptionId);
-
-            // Parse the tags values
-
-            return false;
+            _logger.LogError($"Undefined exception: {e.Message}");
+            return req.CreateResponse(HttpStatusCode.InternalServerError);
         }
 
-        private void DisableSubscription(SubscriptionClient client, string subscriptionId)
+        return req.CreateResponse(HttpStatusCode.OK);
+    }
+
+    private Alert ParseHttpRequest(HttpRequestData req)
+    {
+        var body = new StreamReader(req.Body).ReadToEnd();
+        if (string.IsNullOrEmpty(body))
         {
-            _logger.LogDebug("Disabling subscription.");
-
-            // TODO: Implementation
-
-            return;
+            throw new ParserException("Unknown request schema provided.");
         }
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        return JsonSerializer.Deserialize<Alert>(body, options);
+    }
+
+    private bool CheckSubscriptionTags(SubscriptionClient client, string subscriptionId)
+    {
+        _logger.LogDebug("Retrieving subscription.");
+
+        // TODO: Implementation
+
+        // Retrieve the subscription
+        client.Get(subscriptionId);
+
+        // Parse the tags values
+
+        return false;
+    }
+
+    private void DisableSubscription(SubscriptionClient client, string subscriptionId)
+    {
+        _logger.LogDebug("Disabling subscription.");
+
+        // TODO: Implementation
+
+        return;
     }
 }
