@@ -1,4 +1,3 @@
-using Budgets.Clients;
 using Budgets.Exceptions;
 using Budgets.Models;
 
@@ -7,6 +6,7 @@ namespace Budgets;
 public class HttpTrigger
 {
     private readonly ILogger _logger;
+    private string subscriptionId;
 
     public HttpTrigger(ILoggerFactory loggerFactory)
     {
@@ -18,32 +18,23 @@ public class HttpTrigger
     {
         try
         {
-            // Parse
-            _logger.LogInformation("Parsing function request.");
-            var subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
-
-            // Client
-            _logger.LogDebug("Creating subscription client.");
-            var subscriptionClient = new SubscriptionClient(_logger);
-
-            // Check
-            _logger.LogInformation("Checking subscription tags.");
-            if (CheckSubscriptionTags(subscriptionClient, subscriptionId) == false)
-            {
-                // Disable
-                _logger.LogInformation("Disabling subscription.");
-                DisableSubscription(subscriptionClient, subscriptionId);
-            }
-            else
-            {
-                // Exclude
-                _logger.LogInformation("Excluded subscription detected.");
-            }
+            _logger.LogDebug("Parsing function request.");
+            subscriptionId = ParseHttpRequest(req).Data.SubscriptionId;
         }
-        catch (ParserException pe)
+        catch (Exception ex)
         {
-            _logger.LogError(pe.Message);
-            return req.CreateResponse(HttpStatusCode.BadRequest);
+            _logger.LogError(ex, "Error parsing function request.");
+            throw;
+        }
+
+        try
+        {
+            _logger.LogDebug("Initializing subscription client.");
+            var client = new ArmClient(new DefaultAzureCredential());
+            var subscription = client.GetSubscription(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+
+            // _logger.LogDebug("Checking subscription tags.");
+            // var tags = subscription.GetPredefinedTags().GetAll();
         }
         catch (Exception e)
         {
@@ -54,6 +45,9 @@ public class HttpTrigger
         return req.CreateResponse(HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Parses the http request data.
+    /// </summary>
     private Alert ParseHttpRequest(HttpRequestData req)
     {
         var body = new StreamReader(req.Body).ReadToEnd();
@@ -69,26 +63,4 @@ public class HttpTrigger
         return JsonSerializer.Deserialize<Alert>(body, options);
     }
 
-    private bool CheckSubscriptionTags(SubscriptionClient client, string subscriptionId)
-    {
-        _logger.LogDebug("Retrieving subscription.");
-
-        // TODO: Implementation
-
-        // Retrieve the subscription
-        client.Get(subscriptionId);
-
-        // Parse the tags values
-
-        return false;
-    }
-
-    private void DisableSubscription(SubscriptionClient client, string subscriptionId)
-    {
-        _logger.LogDebug("Disabling subscription.");
-
-        // TODO: Implementation
-
-        return;
-    }
 }

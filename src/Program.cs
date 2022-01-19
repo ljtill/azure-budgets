@@ -6,7 +6,7 @@ public class Program
     {
         var host = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults()
-            .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Trace))
+            .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Information))
             .Build();
 
         host.Run();
