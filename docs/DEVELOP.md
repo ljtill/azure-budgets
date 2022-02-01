@@ -33,6 +33,4 @@ http -v POST 'http://localhost:7071/api/HttpTrigger' < ./docs/sample.json
 
 Invoke (curl)
 
-```shell
-
-```
+> TODO
