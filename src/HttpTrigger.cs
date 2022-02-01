@@ -31,7 +31,7 @@ public class HttpTrigger
         {
             _logger.LogDebug("Initializing subscription client.");
             var client = new ArmClient(new DefaultAzureCredential());
-            var subscription = client.GetSubscription(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+            //var subscription = client.GetSubscription(new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 
             // _logger.LogDebug("Checking subscription tags.");
             // var tags = subscription.GetPredefinedTags().GetAll();
@@ -48,7 +48,7 @@ public class HttpTrigger
     /// <summary>
     /// Parses the http request data.
     /// </summary>
-    private Alert ParseHttpRequest(HttpRequestData req)
+    private static Alert ParseHttpRequest(HttpRequestData req)
     {
         var body = new StreamReader(req.Body).ReadToEnd();
         if (string.IsNullOrEmpty(body))
