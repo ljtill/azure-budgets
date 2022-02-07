@@ -1,12 +1,12 @@
 namespace Budgets.Models;
 
-public class Alert
+public class Notification
 {
     public string SchemaId { get; set; }
-    public AlertData Data { get; set; }
+    public NotificationData Data { get; set; }
 }
 
-public class AlertData
+public class NotificationData
 {
     public string SubscriptionName { get; set; }
     public string SubscriptionId { get; set; }
