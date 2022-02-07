@@ -28,7 +28,7 @@ Create the _local.settings.json_ file
 Invoke (httpie.io)
 
 ```shell
-http -v POST 'http://localhost:7071/api/HttpTrigger' < ./docs/sample.json
+http -v POST 'http://localhost:7071/api/HttpTrigger' < ./docs/payload/sample.json
 ```
 
 Invoke (curl)
