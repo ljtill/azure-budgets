@@ -15,16 +15,14 @@ public class HttpTrigger
     }
 
     [Function("HttpTrigger")]
-    public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+    public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
     {
-        var credential = new DefaultAzureCredential();
-        
         try
         {
             var resourceId = GetResourceId(_logger, req);
-            if (ExclusionTagExists(_logger, credential, resourceId) is false)
+            if (ExclusionTagExists(_logger, resourceId) is false)
             {
-                await DisableSubscription(_logger, credential, resourceId);
+                DisableSubscription(_logger, resourceId);
             }
         }
         catch (Exception ex)
@@ -37,9 +35,9 @@ public class HttpTrigger
     }
 
     /// <summary>
-    /// Parse Payload
+    /// Parse Alert
     /// </summary>
-    private static ResourceIdentifier GetResourceId(ILogger logger, HttpRequestData req)
+    private static string GetResourceId(ILogger logger, HttpRequestData req)
     {
         logger.LogDebug("[HttpTrigger] Parsing notification request");
         
@@ -65,74 +63,28 @@ public class HttpTrigger
             throw new Exception("Notification data object is null");
         }
         
-        return new ResourceIdentifier($"/subscriptions/{notification.Data.SubscriptionId}");;
+        return $"/subscriptions/{notification.Data.SubscriptionId}";
     }
 
     /// <summary>
     /// Check Subscription Tags
     /// </summary>
     /// <param name="logger"></param>
-    /// <param name="credential"></param>
     /// <param name="resourceId"></param>
-    private static bool ExclusionTagExists(ILogger logger, TokenCredential credential, ResourceIdentifier resourceId)
+    private static bool ExclusionTagExists(ILogger logger, string resourceId)
     {
         logger.LogDebug("[HttpTrigger] Checking subscription tags");
-
-        var armClient = new ArmClient(credential);
-        var subscription = armClient.GetSubscription(resourceId);
         
-        var enumerator = subscription.GetAllPredefinedTags().GetEnumerator();
-
-        try
-        {
-            while (enumerator.MoveNext())
-            {
-                if (enumerator.Current is not {TagName: "Exclusion"}) continue;
-                logger.LogDebug("[HttpTrigger] Subscription exclusion found");
-                return true;
-            }
-        }
-        catch (RequestFailedException fe)
-        {
-            var messages = fe.Message.Split(
-                new [] { Environment.NewLine },
-                StringSplitOptions.None
-            );
-            
-            throw new Exception(messages[0]);
-        }
-        catch
-        {
-            enumerator.Dispose();
-        }
-
         return false;
     }
     
     /// <summary>
-    /// Disable subscription
+    /// Disable Subscription
     /// </summary>
     /// <param name="logger"></param>
-    /// <param name="credential"></param>
     /// <param name="resourceId"></param>
-    private static async Task DisableSubscription(ILogger logger, TokenCredential credential, ResourceIdentifier resourceId)
+    private static void DisableSubscription(ILogger logger, string resourceId)
     {
         logger.LogDebug("[HttpTrigger] Disabling subscription");
-        AccessToken token;
-
-        try
-        {
-            token = await credential.GetTokenAsync(new TokenRequestContext(), CancellationToken.None);
-        }
-        catch
-        {
-            throw new Exception("Exception caught..");
-        }
-        
-        var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri("https://management.azure.com");
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        
     }
 }

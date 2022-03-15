@@ -8,6 +8,7 @@ public class Program
     {
         var host = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults()
+            // TODO: Patch worker logging
             .ConfigureLogging(c => c.SetMinimumLevel(LogLevel.Debug))
             .Build();
 

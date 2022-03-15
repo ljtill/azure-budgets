@@ -12,8 +12,3 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Azure.Functions.Worker;
 global using Microsoft.Azure.Functions.Worker.Http;
 global using Microsoft.Azure.Functions.Worker.Configuration;
-global using Azure.Core;
-global using Azure.Identity;
-global using Azure.ResourceManager;
-global using Azure.ResourceManager.Resources;
-global using Azure.ResourceManager.Resources.Models;
