@@ -1,6 +1,8 @@
-# Budgets (Prototype)
+# Budgets
 
 Budgets is a tool for enforcing hard limits on Azure Subscriptions spend. By integrating with Cost Management and Action Groups this tool can pro-actively disable a given Subscription when defined limits have been reached.
+
+_Please note this repository is under development and subject to change._
 
 ## Guides
 
